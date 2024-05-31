@@ -12,7 +12,7 @@ NxtFireGuard's integration with Cisco Identity Services Engine (ISE) facilitates
 
 1. **Clone the Repository**:
     ```sh
-    https://github.com/NxtGenIT/NxtFireGuard-Cisco-Identity-Services-Engine.git
+    git clone https://github.com/NxtGenIT/NxtFireGuard-Cisco-Identity-Services-Engine.git
     cd NxtFireGuard-Cisco-Identity-Services-Engine
     ```
 
@@ -22,18 +22,18 @@ NxtFireGuard's integration with Cisco Identity Services Engine (ISE) facilitates
 
 3. **Start the Syslog Container**:
     ```sh
-    docker-compose up -d
+    docker compose up -d
     ```
 
 4. **Configure Cisco ISE**:
     - Log in to your Cisco ISE administration console.
     - Navigate to **Administration** > **System** > **Logging** > **Remote Logging Targets**.
-    - Add a new Syslog target pointing to the Syslog container's IP address and port.
+    - Add a new Syslog target pointing to the Syslog container's IP address on port UDP/514.
 
 5. **Verify Integration**:
     - Verify that Cisco ISE is sending logs to the Syslog Container.
     - Log in to your NxtFireGuard Dashboard at https://nxtfireguard.de/.
-    - Navigate to the **Hosts** tab to verify that logs from Cisco ISE are being received and processed.
+    - Navigate to the **Hosts** tab to verify that logs from Cisco ISE are being received.
 
 ## Support
 For any issues or questions please contact our support team at [support@nxtgenit.de](mailto:support@nxtgenit.de).
