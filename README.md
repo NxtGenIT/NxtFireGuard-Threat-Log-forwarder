@@ -19,6 +19,7 @@ NxtFireGuard's integration with Cisco Identity Services Engine (ISE) facilitates
 2. **Update the Docker Compose File**:
     - Open `docker-compose.yml` in a text editor.
     - Replace `<your-license-key>` with your purchased NxtFireGuard license key.
+    - Replace <list-of-blocklists> with the names of the blocklists you want us to consider, such as my-blocklist-1, my-blocklist-2. You can create or delete blocklists on our Dashboard Website.
 
 3. **Start the Syslog Container**:
     ```sh

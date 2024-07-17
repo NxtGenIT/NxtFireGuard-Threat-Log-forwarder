@@ -12,4 +12,5 @@ services:
       - ./entrypoint.sh:/entrypoint.sh
     environment:
       X_API_KEY: "<your-license-key>"
+      X_BLOCKLISTS: "<list-of-blocklists>"
     entrypoint: ./entrypoint.sh
