@@ -8,9 +8,19 @@ services:
       - "601:601"
       - "6514:6514"
     volumes:
-      - ./syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
-      - ./entrypoint.sh:/entrypoint.sh
+      - ./syslog/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
+      - ./syslog/entrypoint.sh:/entrypoint.sh
     environment:
       X_API_KEY: "<your-license-key>"
       X_BLOCKLISTS: "<list-of-blocklists>"
     entrypoint: ./entrypoint.sh
+
+  shun-ftd:
+    image: python:3.10-alpine
+    container_name: shun-ftd
+    restart: always
+    environment:
+      BLOCKLIST_URLS: "<list-of-the-blocklist-urls-you-want-to-apply>"
+      HOSTS: "<list-of-your-ftd-ips>"
+      SSH_USER: "<your-ftd-ssh-user>"
+      SSH_PASSWORD: "<your-ftd-ssh-password>"
