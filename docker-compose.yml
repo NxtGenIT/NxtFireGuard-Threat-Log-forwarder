@@ -17,10 +17,13 @@ services:
 
   shun-ftd:
     image: python:3.10-alpine
+    build:
+      context: ./shun/
+      dockerfile: dockerfile
     container_name: shun-ftd
     restart: always
     environment:
-      BLOCKLIST_URLS: "<list-of-the-blocklist-urls-you-want-to-apply>"
-      HOSTS: "<list-of-your-ftd-ips>"
-      SSH_USER: "<your-ftd-ssh-user>"
-      SSH_PASSWORD: "<your-ftd-ssh-password>"
+      BLOCKLIST_URLS: "<list-of-blocklist-urls>"
+      HOSTS: "<list-of-hosts>"
+      SSH_USER: "<ssh-user>"
+      SSH_PASSWORD: "<ssh-password>"

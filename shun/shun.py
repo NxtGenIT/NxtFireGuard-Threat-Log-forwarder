@@ -3,7 +3,15 @@ import requests
 import time
 from ftd_connector import ftd_connection
 import re
+import logging
 
+# Logging configuration
+logger = logging.getLogger('shun_logger')
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def get_blocklists(blocklist_urls):
@@ -19,8 +27,7 @@ def get_blocklists(blocklist_urls):
             ips = re.findall(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b', response.text)
             blocklist_ips.update(ips)
         except requests.exceptions.RequestException as e:
-            print(f"Error fetching {blocklist_url}: {e}")
-            print(response.text)
+            logger.error(f"Error fetching {blocklist_url}: {e}")
 
     return blocklist_ips
 
@@ -44,7 +51,7 @@ def get_currently_blocked_ips(host, ssh_user, ssh_password):
         device = ftd_connection(host, ssh_user, ssh_password)
         output = device.send_command_clish("show shun")
     except Exception as e:
-        print(f"Exception occurred during get_currently_blocked_ips {e}")
+        logger.error(f"Exception occurred during get_currently_blocked_ips {e}")
         return set()
 
     # Extract IP addresses using a regular expression
@@ -56,18 +63,18 @@ def block_ip(host, ssh_user, ssh_password, ip):
     try:
         device = ftd_connection(host, ssh_user, ssh_password)
         output = device.send_command_clish(f"shun {ip}")
-        print(f"{host} shun {ip}")
+        logger.info(f"{host} shun {ip}")
     except Exception as e:
-        print(f"Exception occurred during block_ip {e}")
+        logger.error(f"Exception occurred during block_ip {e}")
         
 
 def unblock_ip(host, ssh_user, ssh_password, ip):
     try:
         device = ftd_connection(host, ssh_user, ssh_password)
         output = device.send_command_clish(f"no shun {ip}")
-        print(f"{host} no shun {ip}")
+        logger.info(f"{host} no shun {ip}")
     except Exception as e:
-        print(f"Exception occurred during block_ip {e}")
+        logger.error(f"Exception occurred during block_ip {e}")
         
 
 
@@ -75,12 +82,16 @@ if __name__ == "__main__":
 
     try: 
         # read variables from docker compose file
-        blocklist_urls = os.environ["BLOCKLIST_URLS"]
-        hosts = os.environ["HOSTS"]
+        blocklist_urls = os.environ["BLOCKLIST_URLS"].split(',')
+        logger.info(f"blocklist_urls: {blocklist_urls}")
+        hosts = os.environ["HOSTS"].split(',')
+        logger.info(f"hosts: {hosts}")
         ssh_user = os.environ["SSH_USER"]
+        logger.info(f"ssh_user: {ssh_user}")
         ssh_password = os.environ["SSH_PASSWORD"]
+        logger.info(f"ssh_password: {ssh_password}")
     except Exception as e:
-        print("Missing configuration. This script requires the following variables in your docker-compose.yml file:\n1. BLOCKLIST_URLS\n2. HOSTS\n3. SSH_USER\n4. SSH_PASSWORD")
+        logger.error("Missing configuration. This script requires the following variables in your docker-compose.yml file:\n1. BLOCKLIST_URLS\n2. HOSTS\n3. SSH_USER\n4. SSH_PASSWORD")
 
 
     ips_from_nfg_blocklists = get_blocklists(blocklist_urls) # get all IPs in all specified blocklists
@@ -91,7 +102,7 @@ if __name__ == "__main__":
         # Create the lists for shun and no shun
         ips_to_block = ips_from_nfg_blocklists - currently_blocked_ips
         ips_to_unblock = currently_blocked_ips - ips_from_nfg_blocklists
-        print(f"{len(ips_to_block)} IPs to shun\n{len(ips_to_unblock)} IPs to no shun")
+        logger.info(f"{len(ips_to_block)} IPs to shun\n{len(ips_to_unblock)} IPs to no shun")
 
         # shun IPs
         for ip_to_block in ips_to_block:
