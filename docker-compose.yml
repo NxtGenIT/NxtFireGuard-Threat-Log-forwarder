@@ -1,29 +1,10 @@
 services:
   syslog-ng:
     image: balabit/syslog-ng:latest
-    container_name: syslog-ng
+    container_name: nfg-syslog-forwarder
     restart: always
     ports:
       - "514:514/udp"
-      - "601:601"
-      - "6514:6514"
+      - "1025:1025/udp"
     volumes:
       - ./syslog/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
-      - ./syslog/entrypoint.sh:/entrypoint.sh
-    environment:
-      X_API_KEY: "<your-license-key>"
-      X_BLOCKLISTS: "<list-of-blocklists>"
-    entrypoint: ./entrypoint.sh
-
-  shun-ftd:
-    image: python:3.10-alpine
-    build:
-      context: ./shun/
-      dockerfile: dockerfile
-    container_name: shun-ftd
-    restart: always
-    environment:
-      BLOCKLIST_URLS: ""
-      HOSTS: ""
-      SSH_USER: ""
-      SSH_PASSWORD: ""
