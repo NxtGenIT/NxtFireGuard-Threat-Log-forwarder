@@ -1,4 +1,4 @@
-# NxtFireGuard-Cisco-Identity-Services-Engine Integration
+# NxtFireGuard-Syslog-forwarder
 
 ## Overview
 This Syslog container serves as an intermediary, forwarding logs from Cisco ISE and Cisco Firepower to NxtFireGuard.
