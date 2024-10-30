@@ -28,7 +28,7 @@ Replace `<your-license-key>` with your valid NxtFireGuard license key.
 Start the Syslog Container:
 
 ```sh
-docker compose up syslog-ng -d
+docker compose up nfg-syslog-ng -d
 ```
 
 ## Usage for T-Pot
@@ -40,7 +40,7 @@ Update the values in the `.env` file as per your setup requirements. Note that t
 Start the Logstash Container:
 
 ```sh
-docker compose up logstash -d
+docker compose up nfg-logstash -d
 ```
 
 ## Support
