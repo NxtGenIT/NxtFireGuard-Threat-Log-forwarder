@@ -1,31 +1,42 @@
-# NxtFireGuard-Syslog-forwarder
+# NxtFireGuard-Syslog-Forwarder
 
 ## Overview
-This Syslog container serves as an intermediary, forwarding logs from Cisco ISE and Cisco Firepower to NxtFireGuard.
+The NxtFireGuard-Syslog-Forwarder is a Syslog container designed to relay logs from Cisco ISE and Cisco Firepower devices to the NxtFireGuard platform.
 
 ## Prerequisites
-- A valid NxtFireGuard license key.
+- An active NxtFireGuard license key.
 - Docker installed on your system.
 
-## Installation and Configuration
+## Setup and Usage
 
-1. **Clone the Repository**:
+### Clone the Repository
+    To get started, clone the repository and navigate to the project directory:
+
     ```sh
     git clone https://github.com/NxtGenIT/NxtFireGuard-Syslog-forwarder.git
     cd NxtFireGuard-Syslog-forwarder
     ```
 
-2. **Update the Docker Compose File**:
-    - Open `syslog/syslog-ng.conf` in a text editor.
-    - Replace `<your-license-key>` with your purchased NxtFireGuard license key.
+## Usage for Cisco FMC and Cisco ISE
 
-3. **Start the Syslog Container**:
+### Configure the Syslog-ng Configuration File:
+    Open syslog/syslog-ng.conf in a text editor.
+    Replace `<your-license-key>` with your valid NxtFireGuard license key.
+
+    Start the Syslog Container:
+
     ```sh
-    docker compose up -d
+    docker compose up syslog-ng -d
     ```
 
-## Support
-For any issues or questions please create an Issue or contact our support team at [support@nxtgenit.de](mailto:support@nxtgenit.de).
+## Usage for T-Pot
 
-## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+### Set Up the Environment File:
+    Rename `.env.example` to `.env.`
+    Update the values in the `.env` file as per your setup requirements. Note that the default `ELK_URL` is preconfigured for standard T-Pot installations.
+
+    Start the Logstash Container:
+
+    ```sh
+    docker compose up logstash -d
+    ```
