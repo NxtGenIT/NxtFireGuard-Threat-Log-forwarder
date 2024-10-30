@@ -1,7 +1,7 @@
 # NxtFireGuard-Syslog-Forwarder
 
 ## Overview
-Threat Log Forwarder for Cisco Firepower and ISE aswell as T-Pot to NxtFireGuard.
+Threat Log Forwarder for Cisco Firepower and ISE as well as T-Pot to NxtFireGuard.
 
 ## Prerequisites
 - An active NxtFireGuard license key.
