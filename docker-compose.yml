@@ -8,3 +8,20 @@ services:
       - "1025:1025/udp"
     volumes:
       - ./syslog/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.14.2
+    volumes:
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+    environment:
+      - ELK_URL=${ELK_URL:-http://elasticsearch:9200}
+      - ELK_USER=${ELK_USER:-}
+      - ELK_PASSWORD=${ELK_PASSWORD:-}
+      - DESTINATION_URL=${DESTINATION_URL:-https://collector.nxtfireguard.de/t-pot}
+      - X_LICENSE_KEY=${X_LICENSE_KEY:-}
+    networks:
+      - tpotce_default
+
+networks:
+ tpotce_default:
+    external: true

@@ -1,31 +1,51 @@
-# NxtFireGuard-Syslog-forwarder
+# NxtFireGuard-Syslog-Forwarder
 
 ## Overview
-This Syslog container serves as an intermediary, forwarding logs from Cisco ISE and Cisco Firepower to NxtFireGuard.
+Threat Log Forwarder for Cisco Firepower and ISE as well as T-Pot to NxtFireGuard.
+
+For complete documentation, please visit our [Documentation Page](https://docs.nxtfireguard.de/docs/Hosts/syslog-forwarder).
 
 ## Prerequisites
-- A valid NxtFireGuard license key.
+- An active NxtFireGuard license key.
 - Docker installed on your system.
 
-## Installation and Configuration
+## Setup and Usage
 
-1. **Clone the Repository**:
-    ```sh
-    git clone https://github.com/NxtGenIT/NxtFireGuard-Syslog-forwarder.git
-    cd NxtFireGuard-Syslog-forwarder
-    ```
+### Clone the Repository
+To get started, clone the repository and navigate to the project directory:
 
-2. **Update the Docker Compose File**:
-    - Open `syslog/syslog-ng.conf` in a text editor.
-    - Replace `<your-license-key>` with your purchased NxtFireGuard license key.
+```sh
+git clone https://github.com/NxtGenIT/NxtFireGuard-Syslog-forwarder.git
+cd NxtFireGuard-Syslog-forwarder
+```
 
-3. **Start the Syslog Container**:
-    ```sh
-    docker compose up -d
-    ```
+## Usage for Cisco FMC and Cisco ISE
+
+### Configure the Syslog-ng Configuration File:
+Open syslog/syslog-ng.conf in a text editor.
+Replace `<your-license-key>` with your valid NxtFireGuard license key.
+
+Start the Syslog Container:
+
+```sh
+docker compose up syslog-ng -d
+```
+
+## Usage for T-Pot
+
+### Set Up the Environment File:
+Rename `.env.example` to `.env`
+Update the values in the `.env` file as per your setup requirements. Note that the default `ELK_URL` is preconfigured for standard T-Pot installations.
+
+Start the Logstash Container:
+
+```sh
+docker compose up logstash -d
+```
 
 ## Support
-For any issues or questions please create an Issue or contact our support team at [support@nxtgenit.de](mailto:support@nxtgenit.de).
+If you encounter any issues or have questions, feel free to [open an issue](https://github.com/NxtGenIT/NxtFireGuard-Syslog-forwarder/issues) on GitHub or reach out to our support team through our [contact form](https://nxtfireguard.de/pages/contact-form?topic=support).
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
