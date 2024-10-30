@@ -1,5 +1,5 @@
 services:
-  syslog-ng:
+  nfg-syslog-ng:
     image: balabit/syslog-ng:latest
     container_name: nfg-syslog-forwarder
     restart: always
@@ -8,7 +8,7 @@ services:
       - "1025:1025/udp"
     volumes:
       - ./syslog/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
-  logstash:
+  nfg-logstash:
     image: docker.elastic.co/logstash/logstash:8.14.2
     volumes:
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
