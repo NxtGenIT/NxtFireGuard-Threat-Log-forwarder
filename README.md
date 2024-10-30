@@ -11,8 +11,8 @@ For complete documentation, please visit our [Documentation Page](https://docs.n
 
 ## Setup and Usage
 
-### Clone the Repository
-To get started, clone the repository and navigate to the project directory:
+### Download the latest release
+To get started, download the latest release and navigate to the project directory:
 
 ```sh
 git clone https://github.com/NxtGenIT/NxtFireGuard-Syslog-forwarder.git
