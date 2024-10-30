@@ -1,7 +1,7 @@
 # NxtFireGuard-Syslog-Forwarder
 
 ## Overview
-The NxtFireGuard-Syslog-Forwarder is a Syslog container designed to relay logs from Cisco ISE and Cisco Firepower devices to the NxtFireGuard platform.
+Threat Log Forwarder for Cisco Firepower and ISE aswell as T-Pot to NxtFireGuard.
 
 ## Prerequisites
 - An active NxtFireGuard license key.
