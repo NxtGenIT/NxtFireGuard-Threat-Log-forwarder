@@ -20,8 +20,8 @@ services:
       - DESTINATION_URL=${DESTINATION_URL:-https://collector.nxtfireguard.de/t-pot}
       - X_LICENSE_KEY=${X_LICENSE_KEY:-}
     networks:
-      - tpotce_elasticpot_local
+      - tpotce_nginx_local
 
 networks:
- tpotce_elasticpot_local:
+ tpotce_nginx_local:
     external: true
