@@ -10,6 +10,8 @@ services:
       - ./syslog/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
   nfg-logstash:
     image: docker.elastic.co/logstash/logstash:8.14.2
+    container_name: nfg-logstash
+    restart: always
     volumes:
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
       - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
