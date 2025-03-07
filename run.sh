@@ -25,10 +25,16 @@ start_services() {
     fi
     echo "Starting services: ${SERVICES_TO_START[*]}"
     docker compose up -d "${SERVICES_TO_START[@]}"
+
+    # Start the monitoring script after services are started
+    ./monitor.sh start
 }
 
 # Function to stop running services (even if disabled in .env)
 stop_services() {
+    # First stop the monitoring script
+    ./monitor.sh stop
+    
     RUNNING_SERVICES=()
 
     # Check which services are running

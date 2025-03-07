@@ -1,13 +1,23 @@
 services:
   nfg-syslog:
-    image: balabit/syslog-ng:latest
+    image: linuxserver/syslog-ng:latest
     container_name: nfg-syslog
     restart: always
     ports:
       - "514:514/udp"
       - "1025:1025/udp"
     volumes:
-      - ./syslog/syslog-ng.conf:/etc/syslog-ng/syslog-ng.conf
+      - ./syslog/syslog-ng.conf:/config/syslog-ng.conf
+      - ./logs:/var/log/syslog-ng
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
   nfg-logstash:
     image: docker.elastic.co/logstash/logstash:8.14.2
     container_name: nfg-logstash
@@ -19,9 +29,14 @@ services:
       - ELK_URL=${ELK_URL:-http://elasticsearch:9200}
       - ELK_USER=${ELK_USER:-}
       - ELK_PASSWORD=${ELK_PASSWORD:-}
-      - DESTINATION_URL=${DESTINATION_URL:-https://collector.nxtfireguard.de/t-pot}
+      - DESTINATION_URL="https://collector.nxtfireguard.de/t-pot"
       - X_LICENSE_KEY=${X_LICENSE_KEY:-}
       - SYSLOGNG_OPTS="--no-caps"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - tpotce_nginx_local
 
