@@ -1,7 +1,7 @@
 services:
-  nfg-syslog-ng:
+  nfg-syslog:
     image: balabit/syslog-ng:latest
-    container_name: nfg-syslog-forwarder
+    container_name: nfg-syslog
     restart: always
     ports:
       - "514:514/udp"
@@ -21,6 +21,7 @@ services:
       - ELK_PASSWORD=${ELK_PASSWORD:-}
       - DESTINATION_URL=${DESTINATION_URL:-https://collector.nxtfireguard.de/t-pot}
       - X_LICENSE_KEY=${X_LICENSE_KEY:-}
+      - SYSLOGNG_OPTS="--no-caps"
     networks:
       - tpotce_nginx_local
 
