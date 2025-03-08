@@ -157,10 +157,10 @@ echo "ELK_USER=elastic" >> $ENV_FILE
 echo "ELK_PASSWORD=changeme" >> $ENV_FILE
 
 # Update syslog-ng.conf if RUN_SYSLOG is enabled
-if [[ "$RUN_SYSLOG" == "true" ]]; then
-    echo "Updating syslog-ng.conf with your license key..."
-    sed -i "s/<your-license-key>/$LICENSE_KEY/g" syslog/syslog-ng.conf
-fi
+# if [[ "$RUN_SYSLOG" == "true" ]]; then
+#     echo "Updating syslog-ng.conf with your license key..."
+#     sed -i "s/<your-license-key>/$LICENSE_KEY/g" syslog/syslog-ng.conf
+# fi
 
 # Make run.sh and monitor.sh executable
 chmod +x run.sh

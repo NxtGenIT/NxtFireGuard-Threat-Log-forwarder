@@ -17,18 +17,47 @@ SERVICES_TO_START=()
 [[ "$RUN_LOGSTASH" == "true" ]] && SERVICES_TO_START+=("$LOGSTASH_SERVICE")
 [[ "$RUN_SYSLOG" == "true" ]] && SERVICES_TO_START+=("$SYSLOG_SERVICE")
 
+
 # Function to start services
 start_services() {
     if [[ ${#SERVICES_TO_START[@]} -eq 0 ]]; then
         echo "No services enabled to run. Exiting."
         exit 0
     fi
-    echo "Starting services: ${SERVICES_TO_START[*]}"
-    docker compose up -d "${SERVICES_TO_START[@]}"
+
+    echo "Checking service status..."
+
+    SERVICES_TO_LAUNCH=()
+
+    for SERVICE in "${SERVICES_TO_START[@]}"; do
+        CONTAINER_ID=$(docker ps -aq -f name="^${SERVICE}$")
+
+        if [[ -n "$CONTAINER_ID" ]]; then
+            RUNNING=$(docker ps -q -f id="$CONTAINER_ID")
+
+            if [[ -n "$RUNNING" ]]; then
+                echo "$SERVICE is already running."
+            else
+                echo "Found stopped container for $SERVICE. Removing it..."
+                docker rm "$CONTAINER_ID"
+                SERVICES_TO_LAUNCH+=("$SERVICE")
+            fi
+        else
+            echo "Starting $SERVICE..."
+            SERVICES_TO_LAUNCH+=("$SERVICE")
+        fi
+    done
+
+    if [[ ${#SERVICES_TO_LAUNCH[@]} -gt 0 ]]; then
+        docker compose up -d "${SERVICES_TO_LAUNCH[@]}"
+    else
+        echo "All services are already running. No action needed."
+    fi
 
     # Start the monitoring script after services are started
     ./monitor.sh start
 }
+
 
 # Function to stop running services (even if disabled in .env)
 stop_services() {

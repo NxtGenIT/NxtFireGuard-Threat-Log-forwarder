@@ -38,7 +38,7 @@ monitor_services() {
                 # Container is not running, it might have crashed
                 echo "$service has stopped. Checking logs..."
 
-                # Capture the logs from the container
+                # Capture the latest 20 logs from the container
                 error_logs=$(docker logs --tail 20 "$service")
 
                 # Determine the forwarder type based on the service name
