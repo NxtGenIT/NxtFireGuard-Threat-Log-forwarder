@@ -85,6 +85,23 @@ setup_docker() {
     fi
 }
 
+# Function to add user to the Docker group and reload shell
+docker_permissions() {
+    REAL_USER=${SUDO_USER:-$USER}
+
+    if ! groups "$REAL_USER" | grep -q "\bdocker\b"; then
+        echo "Adding user $REAL_USER to the Docker group..."
+        sudo usermod -aG docker "$REAL_USER"
+        echo "User $REAL_USER added to the Docker group."
+
+        echo "Applying new group permissions..."
+        sudo su - "$REAL_USER" -c "newgrp docker"
+        
+        echo "Docker permissions updated. You should now be able to run Docker without sudo."
+    else
+        echo "User $REAL_USER is already in the Docker group."
+    fi
+}
 
 echo -e "\n  _   _      _   _____ _           ____                     _ "
 echo " | \\ | |_  _| |_|  ___(_)_ __ ___ / ___|_   _  __ _ _ __ __| |"
@@ -105,9 +122,10 @@ update_system
 install_docker
 install_wget
 setup_docker
+docker_permissions
 
 echo "System setup complete."
-                                             
+
 # Function to prompt for input with default value
 prompt_for_input() {
     local prompt="$1"
