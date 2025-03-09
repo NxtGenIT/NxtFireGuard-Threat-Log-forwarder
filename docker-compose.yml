@@ -2,7 +2,7 @@ services:
   nfg-syslog:
     image: linuxserver/syslog-ng:latest
     container_name: nfg-syslog
-    restart: always
+    restart: unless-stopped
     ports:
       - "514:514/udp"
       - "1025:1025/udp"
@@ -22,7 +22,7 @@ services:
   nfg-logstash:
     image: docker.elastic.co/logstash/logstash:8.14.2
     container_name: nfg-logstash
-    restart: always
+    restart: unless-stopped
     volumes:
       - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
       - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml

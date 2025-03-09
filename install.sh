@@ -82,8 +82,6 @@ setup_docker() {
 
 # Function to add user to the Docker group and reload shell
 docker_permissions() {
-    REAL_USER=${SUDO_USER:-$USER}
-
     # Check if the docker group exists, create it if not
     if ! getent group docker > /dev/null; then
         echo "Creating the 'docker' group..."
@@ -101,6 +99,85 @@ docker_permissions() {
     fi
 }
 
+# Function to create the systemd service
+create_systemd_service() {
+    SCRIPT_PATH="$(dirname "$(realpath "$0")")"
+    SERVICE_FILE="/etc/systemd/system/nfg-threat-forwarder.service"
+
+    # Check if the service file already exists
+    if [ -f "$SERVICE_FILE" ]; then
+        echo "Systemd service already exists at $SERVICE_FILE."
+        read -p "Do you want to overwrite it? (y/n): " choice
+        case "$choice" in
+        y|Y)
+            echo "Overwriting the service..."
+            ;;
+        *)
+            echo "Aborting..."
+            exit 0
+            ;;
+        esac
+    fi
+
+    # Create the systemd service file
+    echo "Creating systemd service at $SERVICE_FILE..."
+
+    sudo touch $SERVICE_FILE
+
+    # Write the service configuration
+    sudo echo "[Unit]" > $SERVICE_FILE
+    sudo echo "Description=NxtFireGuard Threat-Log-Forwarder" >> $SERVICE_FILE
+    sudo echo "After=network.target" >> $SERVICE_FILE
+    sudo echo "" >> $SERVICE_FILE
+    sudo echo "[Service]" >> $SERVICE_FILE
+    sudo echo "Type=forking" >> $SERVICE_FILE
+    sudo echo "ExecStart=/bin/bash $SCRIPT_PATH/run.sh start" >> $SERVICE_FILE
+    sudo echo "ExecStop=/bin/bash $SCRIPT_PATH/run.sh stop" >> $SERVICE_FILE
+    sudo echo "ExecReload=/bin/bash $SCRIPT_PATH/run.sh restart" >> $SERVICE_FILE
+    sudo echo "WorkingDirectory=$SCRIPT_PATH" >> $SERVICE_FILE
+    sudo echo "Restart=on-failure" >> $SERVICE_FILE
+    sudo echo "User=$REAL_USER" >> $SERVICE_FILE
+    sudo echo "Group=$REAL_USER" >> $SERVICE_FILE
+    sudo echo "" >> $SERVICE_FILE
+    sudo echo "[Install]" >> $SERVICE_FILE
+    sudo echo "WantedBy=multi-user.target" >> $SERVICE_FILE
+
+    echo "Systemd service created successfully at $SERVICE_FILE."
+
+    # Reload systemd to register the new service
+    sudo systemctl daemon-reload
+
+    # Enable the service
+    sudo systemctl enable nfg-threat-forwarder.service
+
+    echo "Service is now enabled."
+}
+
+# Function to prompt for input with default value
+prompt_for_input() {
+    local prompt_message="$1"
+    local default_value="$2"
+    read -p "$prompt_message [$default_value]: " input
+    echo "${input:-$default_value}"
+}
+
+# Function to prompt for yes/no and convert to true/false
+prompt_for_boolean() {
+    local prompt_message="$1"
+    local default_value="$2"  # Expected default is "false" or "true"
+
+    while true; do
+        read -p "$prompt_message (y/n) [$default_value]: " input
+        input="${input,,}"  # Convert to lowercase
+
+        case "$input" in
+            y|yes) echo "true"; break ;;
+            n|no) echo "false"; break ;;
+            "") echo "$default_value"; break ;;  # Use default if empty
+            *) echo "Invalid input. Please enter y or n." ;;
+        esac
+    done
+}
 
 echo -e "\n  _   _      _   _____ _           ____                     _ "
 echo " | \\ | |_  _| |_|  ___(_)_ __ ___ / ___|_   _  __ _ _ __ __| |"
@@ -115,6 +192,9 @@ if [[ "$EUID" -ne 0 ]]; then
     exit 1
 fi
 
+# get Username
+REAL_USER=${SUDO_USER:-$USER}
+
 # Run all setup functions
 detect_os
 update_system
@@ -124,14 +204,6 @@ docker_permissions
 
 echo "System setup complete."
 
-# Function to prompt for input with default value
-prompt_for_input() {
-    local prompt="$1"
-    local default_value="$2"
-    read -p "$prompt [$default_value]: " input
-    echo "${input:-$default_value}"
-}
-
 # Prompt for Global Settings
 echo "Setting up the environment variables..."
 
@@ -140,8 +212,8 @@ LICENSE_KEY=$(prompt_for_input "Enter your License Key (you can find it here: ht
 FORWARDER_NAME=$(prompt_for_input "What would you like to name your Threat-Log-Forwarder?" "forwarder-name")
 
 # Prompt to enable or disable RUN_LOGSTASH and RUN_SYSLOG
-RUN_SYSLOG=$(prompt_for_input "Do you want to integrate with Cisco-FMC and/or Cisco-ISE (enable RUN_SYSLOG)? (true/false)" "false")
-RUN_LOGSTASH=$(prompt_for_input "Do you want to integrate with T-Pot and enable Logstash? (enable RUN_LOGSTASH)? (true/false)" "false")
+RUN_SYSLOG=$(prompt_for_boolean "Do you want to integrate with Cisco-FMC and/or Cisco-ISE (enable RUN_SYSLOG)?" "n")
+RUN_LOGSTASH=$(prompt_for_boolean "Do you want to integrate with T-Pot and enable Logstash? (enable RUN_LOGSTASH)?" "n")
 
 # Prepare .env file
 ENV_FILE=".env"
@@ -182,6 +254,9 @@ fi
 chmod +x run.sh
 chmod +x monitor.sh
 
+# Create systemd service
+create_systemd_service
+
 # Provide additional instructions based on the user's selections
 echo -e "\nSetup completed.\n"
 
@@ -201,5 +276,6 @@ fi
 # Final Instructions
 echo -e "\nNext Steps:"
 echo "1. Log out and log back in to apply Docker group changes (or run 'newgrp docker')."
-echo "2. Start the services by running: ./run.sh start"
+echo "2. Start the services by running: sudo systemctl start nfg-threat-forwarder"
+echo "3. Check on the service by running: sudo systemctl status nfg-threat-forwarder"
 echo -e "\nFor help, visit: https://nxtfireguard.de/pages/contact-form?topic=support"
