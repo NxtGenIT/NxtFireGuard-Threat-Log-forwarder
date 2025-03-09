@@ -12,13 +12,15 @@ Threat Log Forwarder for Cisco Firepower, Cisco ISE, and T-Pot to NxtFireGuard.
 ### Download the Latest Release
 To get started, download the latest release from the following link:
 [Latest Release](https://github.com/NxtGenIT/NxtFireGuard-Threat-Log-forwarder/releases/latest).
+```sh
+wget <latest-release>
+```
 
 Extract the tar file and navigate to the project directory:
 
 ```sh
-wget v.x.y.tar.gz
- tar -xf v.x.y.tar.gz
- cd NxtFireGuard-Threat-Log-forwarder
+tar -xf v.x.y.tar.gz
+cd NxtFireGuard-Threat-Log-forwarder
 ```
 
 ### Installation
@@ -57,7 +59,7 @@ Log out and log back in to apply the user to the Docker group.
 
 To start the selected service(s), run:
 ```sh
-./run.sh start
+systemctl start nfg-threat-forwarder.service
 ```
 
 ### Usage
