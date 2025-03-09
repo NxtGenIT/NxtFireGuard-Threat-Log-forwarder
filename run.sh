@@ -18,6 +18,43 @@ SERVICES_TO_START=()
 [[ "$RUN_SYSLOG" == "true" ]] && SERVICES_TO_START+=("$SYSLOG_SERVICE")
 
 
+# Function to check service status
+status_services() {
+    echo "Checking configured service status..."
+    
+    if [[ ${#SERVICES_TO_START[@]} -eq 0 ]]; then
+        echo "No services are enabled in the .env file."
+    else
+        for SERVICE in "${SERVICES_TO_START[@]}"; do
+            CONTAINER_ID=$(docker ps -aq -f name="^${SERVICE}$")
+
+            if [[ -n "$CONTAINER_ID" ]]; then
+                RUNNING=$(docker ps -q -f id="$CONTAINER_ID")
+                if [[ -n "$RUNNING" ]]; then
+                    echo "$SERVICE is running."
+                else
+                    echo "$SERVICE exists but is stopped."
+                fi
+            else
+                echo "$SERVICE is not found."
+            fi
+        done
+    fi
+
+    check_monitoring_script
+}
+
+# Function to check if the monitoring script is running
+check_monitoring_script() {
+    MONITOR_PID=$(pgrep -f "./monitor.sh start")
+
+    if [[ -n "$MONITOR_PID" ]]; then
+        echo "Monitoring script is running (PID: $MONITOR_PID)."
+    else
+        echo "Monitoring script is not running."
+    fi
+}
+
 # Function to start services
 start_services() {
     if [[ ${#SERVICES_TO_START[@]} -eq 0 ]]; then
@@ -94,8 +131,11 @@ case "$1" in
         stop_services
         start_services
         ;;
+    status)
+        status_services
+        ;;
     *)
-        echo "Usage: $0 {start|stop|restart}"
+        echo "Usage: $0 {start|stop|restart|status}"
         exit 1
         ;;
 esac

@@ -10,6 +10,7 @@ services:
       - ./syslog/syslog-ng.conf:/config/syslog-ng.conf
       - ./logs:/var/log/syslog-ng
     environment:
+      - X_LICENSE_KEY=${X_LICENSE_KEY:-}
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Berlin
@@ -29,7 +30,6 @@ services:
       - ELK_URL=${ELK_URL:-http://elasticsearch:9200}
       - ELK_USER=${ELK_USER:-}
       - ELK_PASSWORD=${ELK_PASSWORD:-}
-      - DESTINATION_URL="https://collector.nxtfireguard.de/t-pot"
       - X_LICENSE_KEY=${X_LICENSE_KEY:-}
       - SYSLOGNG_OPTS="--no-caps"
     logging:

@@ -69,11 +69,6 @@ install_docker() {
     echo "Docker installation complete!"
 }
 
-# Install wget
-install_wget() {
-    check_install wget
-}
-
 setup_docker() {
     if systemctl is-active --quiet docker; then
         echo "Docker is already running and enabled."
@@ -89,19 +84,23 @@ setup_docker() {
 docker_permissions() {
     REAL_USER=${SUDO_USER:-$USER}
 
+    # Check if the docker group exists, create it if not
+    if ! getent group docker > /dev/null; then
+        echo "Creating the 'docker' group..."
+        groupadd docker
+        echo "'docker' group created."
+    fi
+
+    # Check if the user is already in the docker group
     if ! groups "$REAL_USER" | grep -q "\bdocker\b"; then
         echo "Adding user $REAL_USER to the Docker group..."
-        sudo usermod -aG docker "$REAL_USER"
+        usermod -aG docker "$REAL_USER"
         echo "User $REAL_USER added to the Docker group."
-
-        echo "Applying new group permissions..."
-        sudo su - "$REAL_USER" -c "newgrp docker"
-        
-        echo "Docker permissions updated. You should now be able to run Docker without sudo."
     else
         echo "User $REAL_USER is already in the Docker group."
     fi
 }
+
 
 echo -e "\n  _   _      _   _____ _           ____                     _ "
 echo " | \\ | |_  _| |_|  ___(_)_ __ ___ / ___|_   _  __ _ _ __ __| |"
@@ -120,7 +119,6 @@ fi
 detect_os
 update_system
 install_docker
-install_wget
 setup_docker
 docker_permissions
 
@@ -175,61 +173,33 @@ echo "ELK_USER=elastic" >> $ENV_FILE
 echo "ELK_PASSWORD=changeme" >> $ENV_FILE
 
 # Update syslog-ng.conf if RUN_SYSLOG is enabled
-# if [[ "$RUN_SYSLOG" == "true" ]]; then
-#     echo "Updating syslog-ng.conf with your license key..."
-#     sed -i "s/<your-license-key>/$LICENSE_KEY/g" syslog/syslog-ng.conf
-# fi
+if [[ "$RUN_SYSLOG" == "true" ]]; then
+    echo "Updating syslog-ng.conf with your license key..."
+    sed -i "s/<your-license-key>/$LICENSE_KEY/g" syslog/syslog-ng.conf
+fi
 
 # Make run.sh and monitor.sh executable
 chmod +x run.sh
 chmod +x monitor.sh
 
-# Start the services using run.sh
-echo "Starting services with run.sh..."
-./run.sh start
-
 # Provide additional instructions based on the user's selections
 echo -e "\nSetup completed.\n"
 
-# Instructions for T-Pot (Logstash)
 if [[ "$RUN_LOGSTASH" == "true" ]]; then
-    echo -e "\nYou have enabled T-Pot (Logstash). Once the setup is complete, follow these steps to verify:"
-    echo "- Ensure that T-Pot is properly sending logs to NxtFireGuard."
-    echo "- Double-check that the Elasticsearch URL, User, and Password are correct."
-    echo "- Verify that the hostname in NxtFireGuard matches your T-Pot instance (case sensitive)."
-    echo -e "\nIf you encounter problems:"
-    echo "- Ensure your T-Pots elasticsearch container is running and accessible."
-    echo "- If the logs aren’t coming through, check the network connectivity between T-Pot and NxtFireGuard."
-    echo "- For support or any issues, visit: https://nxtfireguard.de/pages/contact-form?topic=support"
+    echo "You have enabled T-Pot (Logstash). Visit the following Page to complete the setup:"
+    echo "https://docs.nxtfireguard.de/docs/Hosts/honeypot-tpot#next-steps"
     echo ""
 fi
 
-# Instructions for Syslog (Cisco-FMC and Cisco-ISE)
 if [[ "$RUN_SYSLOG" == "true" ]]; then
-    echo -e "\nYou have enabled Syslog integration for Cisco-FMC and/or Cisco-ISE. Once the setup is complete, follow these steps to verify:"
-    echo "- Ensure that Syslog logs are being forwarded to NxtFireGuard."
-    echo "- Double-check the license key and configuration in syslog-ng.conf."
-    echo "- Verify that the hostname in NxtFireGuard matches your Cisco-FTD(s) or Cisco-ISE (case sensitive)."
-    echo -e "\nIf you encounter problems:"
-    echo "- Verify the Syslog configuration on your Cisco-FMC or Cisco-ISE to ensure logs are being sent correctly."
-    echo "- For support or any issues, visit: https://nxtfireguard.de/pages/contact-form?topic=support"
-    echo ""
-    echo -e "\nHow to configure your Cisco ISE and Cisco FMC:"
-    echo "- Point Cisco ISE authentication logs to the IP/hostname of this server on port UDP 1025."
-    echo "  For detailed instructions, visit: https://docs.nxtfireguard.de/docs/Hosts/cisco-identity-services-engine"
-    echo "- Point Cisco FMC to the IP/hostname of this server on port UDP 514."
-    echo "  For detailed instructions, visit: https://docs.nxtfireguard.de/docs/Hosts/cisco-firewall-management-center"
+    echo "You have enabled Syslog integration. Visit the following Page(s) to complete the setup:"
+    echo "- Cisco ISE: https://docs.nxtfireguard.de/docs/Hosts/cisco-identity-services-engine#next-steps"
+    echo "- Cisco FMC: https://docs.nxtfireguard.de/docs/Hosts/cisco-firewall-management-center#next-steps"
     echo ""
 fi
 
-# Instructions
-echo -e "\nInstructions for using run.sh:"
-echo "./run.sh start   -> Start the service"
-echo "./run.sh stop    -> Stop the service"
-echo "./run.sh restart -> Restart the service"
-echo -e "\nTo enable or disable Logstash or Syslog later on, simply modify the .env file or visit the respective documentation on docs.nxtfireguard.de, then run './run.sh restart'."
-echo -e "\nTo update the Forwarder installation, run './update.sh'."
-
-echo -e "\nSetup Complete! If you have any issues or need further assistance, don't hesitate to reach out to us at: https://nxtfireguard.de/pages/contact-form?topic=support"
-
-
+# Final Instructions
+echo -e "\nNext Steps:"
+echo "1. Log out and log back in to apply Docker group changes (or run 'newgrp docker')."
+echo "2. Start the services by running: ./run.sh start"
+echo -e "\nFor help, visit: https://nxtfireguard.de/pages/contact-form?topic=support"
