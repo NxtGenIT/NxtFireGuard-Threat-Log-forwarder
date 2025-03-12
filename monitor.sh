@@ -55,7 +55,7 @@ monitor_services() {
         done
 
         # Wait for some time before rechecking the status
-        sleep 5
+        sleep 10
     done
 }
 
