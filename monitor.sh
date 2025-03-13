@@ -23,7 +23,7 @@ fi
 
 # If no services are enabled, exit
 if [[ ${#SERVICES[@]} -eq 0 ]]; then
-    echo "No services enabled to monitor. Exiting."
+    echo "No services enabled to monitor. Exiting." 
     exit 0
 fi
 
@@ -34,25 +34,39 @@ monitor_services() {
             # Check if the service is running
             container_status=$(docker ps -f "name=$service" --format "{{.Status}}")
 
+            # Determine the forwarder type based on the service name
+            local forwarder_type=""
+            if [[ "$service" == "$LOGSTASH_SERVICE" ]]; then
+                forwarder_type="nfg-logstash"
+            elif [[ "$service" == "$SYSLOG_SERVICE" ]]; then
+                forwarder_type="nfg-syslog"
+            fi
+
             if [[ -z "$container_status" ]]; then
                 # Container is not running, it might have crashed
-                echo "$service has stopped. Checking logs..."
+                echo "$service has stopped. Checking logs..." >> nfg.log
 
-                # Capture the latest 20 logs from the container
-                error_logs=$(docker logs --tail 20 "$service")
+                # Check if the container exists at all
+                container_exists=$(docker ps -a -f "name=$service" --format "{{.ID}}")
 
-                # Determine the forwarder type based on the service name
-                local forwarder_type=""
-                if [[ "$service" == "$LOGSTASH_SERVICE" ]]; then
-                    forwarder_type="nfg-logstash"
-                elif [[ "$service" == "$SYSLOG_SERVICE" ]]; then
-                    forwarder_type="nfg-syslog"
+                if [[ -z "$container_exists" ]]; then
+                    # Container doesn't exist anymore
+                    error_logs="Container for service $service not found. It may have been removed."
+                else
+                    # Container exists but is not running, get its logs
+                    error_logs=$(docker logs --tail 20 "$service" 2>&1 || echo "Failed to retrieve logs for $service")
                 fi
 
                 # Call the API to report the crash with logs
-                call_api "$FORWARDER_NAME" "$forwarder_type" "$X_LICENSE_KEY" "$error_logs"
+                call_api "$FORWARDER_NAME" "$forwarder_type" "$X_LICENSE_KEY" "down" "$error_logs"
+            else
+                # Container is running fine, send heartbeat
+                call_api "$FORWARDER_NAME" "$forwarder_type" "$X_LICENSE_KEY" "up"
             fi
         done
+
+        # Clear log file if necessary
+        clear_log_file
 
         # Wait for some time before rechecking the status
         sleep 10
@@ -64,28 +78,62 @@ call_api() {
     local forwarder_name="$1"
     local forwarder_type="$2"
     local license="$3"
-    local error_message="$4"
+    local status="$4"
+    local error_message="$5"
 
-    # Prepare data
+    # Build base payload
     payload=$(jq -n \
         --arg forwarder_name "$forwarder_name" \
         --arg forwarder_type "$forwarder_type" \
         --arg license "$license" \
-        --arg error_message "$error_message" \
+        --arg status "$status" \
         '{
             "forwarder-name": $forwarder_name,
             "forwarder-type": $forwarder_type,
             "license": $license,
-            "error-log": $error_message
+            "status": $status,
         }')
 
+    # Include error-log only if status is "down"
+    if [[ "$status" == "down" ]]; then
+        payload=$(echo "$payload" | jq --arg error_message "$error_message" '. + { "error-log": $error_message }')
+    fi
+
     # Send the error logs to the API
-    curl -X POST "$API_URL" \
+    api_response=$(curl -s -X POST "$API_URL" \
         -H "Content-Type: application/json" \
         -H "X-License-Key: $license" \
-        -d "$payload"
+        -d "$payload" 2>&1)
 
-    echo "Error reported for $forwarder_name"
+    # Get the current timestamp
+    timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+
+    # Log the message with timestamp and API response
+    if [[ "$status" == "down" ]]; then
+        echo "$timestamp - Error reported for $forwarder_name. API response: $api_response" >> nfg.log
+    else
+        echo "$timestamp - Heartbeat sent. API response: $api_response" >> nfg.log
+    fi
+}
+
+# Function to check and clear log file if it exceeds the threshold
+clear_log_file() {
+    local log_file="nfg.log"
+    local max_size_kb=10240  # 10MiB threshold
+    
+    # Check if file exists
+    if [[ -f "$log_file" ]]; then
+        # Get file size in KiB
+        local file_size=$(du -k "$log_file" | cut -f1)
+        
+        # If file size exceeds threshold, clear it
+        if [[ $file_size -gt $max_size_kb ]]; then
+            timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+            
+            # Clear the file but keep a backup
+            echo "$timestamp - Log file cleared due to size limit ($max_size_kb KB)." > "$log_file"
+        fi
+    fi
 }
 
 # Function to start the monitoring in the background
