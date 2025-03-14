@@ -198,6 +198,7 @@ REAL_USER=${SUDO_USER:-$USER}
 # Run all setup functions
 detect_os
 update_system
+check_install jq
 install_docker
 setup_docker
 docker_permissions
