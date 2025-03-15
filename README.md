@@ -47,11 +47,11 @@ Examples:
   ```
 - Do you want to integrate with Cisco-FMC and/or Cisco-ISE (enable RUN_SYSLOG)?
   ```
-  (true/false) [false]: true
+  (y/n) [n]: y
   ```
 - Do you want to integrate with T-Pot and enable Logstash (enable RUN_LOGSTASH)?
   ```
-  (true/false) [false]: false
+  (y/n) [n]: n
   ```
 
 ### Post-Installation Steps
