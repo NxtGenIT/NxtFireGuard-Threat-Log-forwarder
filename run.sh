@@ -69,22 +69,13 @@ fetch_config() {
 call_api_stop_service() {
     local license="$1"
     local forwarder_name="$2"
-    local api_url="https://api.nxtfireguard.de/threat-log-forwarder/stop"
-
-    # Build payload
-    payload=$(jq -n \
-        --arg license "$license" \
-        --arg forwarder_name "$forwarder_name" \
-        '{
-            "license": $license,
-            "forwarder-name": $forwarder_name
-        }')
+    local api_url="https://api.nxtfireguard.de/threat-log-forwarder/stop?Forwarder-Name=${forwarder_name}"
 
     # Send the stop request to the API
     api_response=$(curl -s -X POST "$api_url" \
         -H "Content-Type: application/json" \
         -H "X-License-Key: $license" \
-        -d "$payload" 2>&1)
+        2>&1)
 
     # Get the current timestamp
     timestamp=$(date "+%Y-%m-%d %H:%M:%S")
@@ -92,6 +83,7 @@ call_api_stop_service() {
     # Log the message with timestamp and API response
     echo "$timestamp - Service stopped reported for $forwarder_name. API response: $api_response" >> nfg.log
 }
+
 
 
 # Check and update configuration
@@ -148,6 +140,21 @@ check_monitoring_script() {
 
 # Function to start services
 start_services() {
+    # Check and update configuration before proceeding
+    check_and_update_config
+
+    # Reload environment variables after potential update
+    set -o allexport
+    source "$(dirname "$0")/.env"
+    set +o allexport
+
+    
+    # Recalculate services to start based on updated .env file
+    SERVICES_TO_START=()
+    [[ "$RUN_LOGSTASH" == "true" ]] && SERVICES_TO_START+=("$LOGSTASH_SERVICE")
+    [[ "$RUN_SYSLOG" == "true" ]] && SERVICES_TO_START+=("$SYSLOG_SERVICE")
+
+
     if [[ ${#SERVICES_TO_START[@]} -eq 0 ]]; then
         echo "No services enabled to run. Exiting."
         exit 0
