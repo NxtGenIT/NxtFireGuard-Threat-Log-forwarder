@@ -295,6 +295,9 @@ chmod +x monitor.sh
 # Create systemd service
 create_systemd_service
 
+# Change ownership of .env and nfg.log to the actual user
+chown "$REAL_USER:$REAL_USER" .env nfg.log
+
 # Provide additional instructions based on the user's selections
 echo -e "\nSetup completed.\n"
 
