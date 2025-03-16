@@ -7,7 +7,7 @@ set +o allexport
 
 LOGSTASH_SERVICE="nfg-logstash"
 SYSLOG_SERVICE="nfg-syslog"
-API_URL="https://api.nxtfireguard.de/host-inactive"
+API_URL="https://api.nxtfireguard.de/threat-log-forwarder/inactive"
 
 # Initialize an empty array to store services to monitor
 SERVICES=()

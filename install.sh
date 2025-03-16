@@ -179,6 +179,45 @@ prompt_for_boolean() {
     done
 }
 
+# Function to get config from API
+fetch_config() {
+    local license="$1"
+    local forwarder_name="$2"
+    local api_url="https://api.nxtfireguard.de/threat-log-forwarder/config"
+
+    # Fetch the configuration from the API
+    response=$(curl -s -X GET "$api_url?Forwarder-Name=$forwarder_name" \
+        -H "X-License-Key: $license" \
+        -H "Accept: application/json")
+
+    # Check if the API call was successful
+    if [[ $? -ne 0 ]]; then
+        echo "Error: Failed to fetch configuration from the API."
+        return 1
+    fi
+
+    # Parse the response to extract logstash_enabled and syslog_enabled
+    logstash_enabled=$(echo "$response" | jq -r '.logstash_enabled')
+    syslog_enabled=$(echo "$response" | jq -r '.syslog_enabled')
+
+    # Validate the response fields
+    if [[ "$logstash_enabled" == "null" || "$syslog_enabled" == "null" ]]; then
+        echo "Error: Invalid response from the API. Please check your license key and forwarder name."
+        return 1
+    fi
+
+    # Write the values to a .env file
+    echo "RUN_LOGSTASH=$logstash_enabled" > .env
+    echo "RUN_SYSLOG=$syslog_enabled" >> .env
+
+    # Log success message
+    echo "$(date "+%Y-%m-%d %H:%M:%S") - Configuration fetched successfully and written to .env file." >> nfg.log
+
+    return 0
+}
+
+
+
 echo -e "\n  _   _      _   _____ _           ____                     _ "
 echo " | \\ | |_  _| |_|  ___(_)_ __ ___ / ___|_   _  __ _ _ __ __| |"
 echo " |  \\| \\ \\/ / __| |_  | | '__/ _ \\ |  _| | | |/ _\` | '__/ _\` |"
@@ -212,15 +251,13 @@ echo "Setting up the environment variables..."
 LICENSE_KEY=$(prompt_for_input "Enter your License Key (you can find it here: https://nxtfireguard.de/pages/dashboard/account)" "your_license_key")
 FORWARDER_NAME=$(prompt_for_input "What would you like to name your Threat-Log-Forwarder?" "forwarder-name")
 
-# Prompt to enable or disable RUN_LOGSTASH and RUN_SYSLOG
-RUN_SYSLOG=$(prompt_for_boolean "Do you want to integrate with Cisco-FMC and/or Cisco-ISE (enable RUN_SYSLOG)?" "n")
-RUN_LOGSTASH=$(prompt_for_boolean "Do you want to integrate with T-Pot and enable Logstash? (enable RUN_LOGSTASH)?" "n")
-
 # Prepare .env file
 ENV_FILE=".env"
 echo "# Global Settings" > $ENV_FILE
-echo "RUN_LOGSTASH=$RUN_LOGSTASH" >> $ENV_FILE
-echo "RUN_SYSLOG=$RUN_SYSLOG" >> $ENV_FILE
+
+# Fetch config (enable disable logstash and syslog) from API
+fetch_config "$LICENSE_KEY" "$FORWARDER_NAME"
+
 echo "X_LICENSE_KEY=$LICENSE_KEY" >> $ENV_FILE
 echo "FORWARDER_NAME=$FORWARDER_NAME" >> $ENV_FILE
 echo "" >> $ENV_FILE
