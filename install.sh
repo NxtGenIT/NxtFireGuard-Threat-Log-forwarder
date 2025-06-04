@@ -216,8 +216,6 @@ fetch_config() {
     return 0
 }
 
-
-
 echo -e "\n  _   _      _   _____ _           ____                     _ "
 echo " | \\ | |_  _| |_|  ___(_)_ __ ___ / ___|_   _  __ _ _ __ __| |"
 echo " |  \\| \\ \\/ / __| |_  | | '__/ _ \\ |  _| | | |/ _\` | '__/ _\` |"
@@ -257,6 +255,9 @@ echo "# Global Settings" > $ENV_FILE
 
 # Fetch config (enable disable logstash and syslog) from API
 fetch_config "$LICENSE_KEY" "$FORWARDER_NAME"
+
+# Load newly written env variables
+source $ENV_FILE
 
 echo "X_LICENSE_KEY=$LICENSE_KEY" >> $ENV_FILE
 echo "FORWARDER_NAME=$FORWARDER_NAME" >> $ENV_FILE
